@@ -1,16 +1,26 @@
 import cv2
+import urllib
+import numpy as np
+from time import sleep
 
 # set up the background subtractor from OpenCV
 backsub = cv2.BackgroundSubtractorMOG()
 # set up the video capture (0 for your webcam or file name for a video file)
 # capture = cv2.VideoCapture(0)
-capture = cv2.VideoCapture('tommy.mp4')
+capture = cv2.VideoCapture('crowdtest.mp4')
+# capture = cv2.VideoCapture('jpeg.cgi.jpg')
+
+# req = urllib.urlopen('http://tommycam.usc.edu/jpeg.cgi')
+# capture = np.asarray(bytearray(req.read()), dtype=np.uint8)
+# print capture
+# img = cv2.imdecode(arr,-1) # 'load it as it is'
+# print img
 
 if capture:
     while (1): # while the camera is on
         ret, frame = capture.read()
         if ret:
-            # find the background masking frame per frame
+            # find the background masking frame per frame and subtract from last frame (adjust the last value for accuracy)
             fgmask = backsub.apply(frame, None, 0.03)
             contours, hierarchy = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,
                                                cv2.CHAIN_APPROX_NONE)
@@ -29,14 +39,14 @@ if capture:
 
                 # set the arbitrary parameters for your bounding box 
                     # e.g., for a far away webcam on a crowd, you want to set this to a person's "size"
-                if w > 10 and h > 15:
+                if w > 5 and h > 10:
                     #includes an ID for every bounding box
                     best_id +=1
 
                     midx = (x+(w/2))
                     midy = (y+(h/2))
                     # draw a dot in the middle of each bounding box
-                    cv2.circle(frame, (midx, midy),10,255,-1)
+                    cv2.circle(frame, (midx, midy),5,255,-1)
                     # draw the bounding box
                     cv2.rectangle(frame, (x,y), (x+w,y+h), (255, 0, 0), 2)
                     #label each bounding box with a unique id
@@ -45,12 +55,14 @@ if capture:
 
             # show the image with all the markers
             cv2.imshow("Track", frame)
+
             # uncomment the below to watch the black/white masking
             # cv2.imshow('fgmask', fgmask)
 
             # this will let you press 'Escape' to exit the video screen
             if cv2.waitKey(33)== 27:
                 break
+            sleep (3)
 
 # Clean up everything before leaving
 cv2.destroyAllWindows()
